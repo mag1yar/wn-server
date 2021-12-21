@@ -16,7 +16,7 @@ export class ChapterEntity {
   id: number;
   @Column()
   name: string;
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   body: OutputBlockData[];
 
   @Column()
