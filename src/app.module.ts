@@ -14,24 +14,29 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { ChapterModule } from './chapter/chapter.module';
 import * as path from 'path';
 import { ChapterEntity } from './chapter/entities/chapter.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { configuration } from 'config/configuration';
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: `${process.cwd()}/config/env/${process.env.NODE_ENV}.env`,
+      isGlobal: true,
+      load: [configuration],
+    }),
     ServeStaticModule.forRoot({ rootPath: path.resolve(__dirname, 'static') }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      // host: 'localhost',
-      // port: 3306,
-      // username: 'root',
-      // password: 'admin',
-      // database: 'worldnovels',
-      host: 'eu-cdbr-west-02.cleardb.net',
-      port: 3306,
-      username: 'b82fe6c700bfb0',
-      password: 'd21ce047',
-      database: 'heroku_4c21b243cdd0e05',
-      entities: [UserEntity, NovelEntity, CommentEntity, ChapterEntity],
-      synchronize: false,
-      migrationsRun: false,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get('database.host'),
+        port: configService.get('database.port'),
+        username: configService.get('database.user'),
+        password: configService.get('database.password'),
+        database: configService.get('database.db'),
+        entities: [UserEntity, NovelEntity, CommentEntity, ChapterEntity],
+        synchronize: configService.get('database.synchronize'),
+      }),
+      inject: [ConfigService],
     }),
     UserModule,
     NovelModule,
